@@ -29,46 +29,50 @@ assign  PortOut = 0;
 //**********************/
 //**********************/
 // Data types to connect modules
+wire ALUSrc_wire;
 wire BranchNE_wire;
 wire BranchEQ_wire;
-wire RegDst_wire;
-wire NotZeroANDBrachNE;
-wire ZeroANDBrachEQ;
-wire ORForBranch;
-wire ALUSrc_wire;
-wire RegWrite_wire;
-wire Zero_wire;
 wire Jump_wire;
 wire JR_wire;
-wire RegWriteORJAL_wire;
 wire MemRead_wire;
 wire MemWrite_wire;
 wire MemtoReg_wire;
+wire NotZeroANDBrachNE;
+wire ORForBranch;
+wire RegDst_wire;
+wire RegWrite_wire;
+wire RegWriteORJAL_wire;
+wire ZeroANDBrachEQ;
+wire Zero_wire;
+
 wire [3:0] ALUOp_wire;
 wire [3:0] ALUOperation_wire;
 wire [4:0] WriteRegister_wire;
 wire [4:0] RAorWriteReg_wire;
-wire [31:0] JOrPC4OrBranchOrJR_wire;
-wire [31:0] MUX_PC_wire;
-wire [31:0] PC_wire;
-wire [31:0] Instruction_wire;
-wire [31:0] ReadData1_wire;
-wire [31:0] ReadData2_wire;
-wire [31:0] InmmediateExtend_wire;
-wire [31:0] ReadData2OrInmmediate_wire;
+
 wire [31:0] ALUResult_wire;
-wire [31:0] PC_4_wire;
+wire [31:0] BranchToPC_wire;
+wire [31:0] BranchAddrSh2_wire;	//Branch address shifted 2 bits
+wire [31:0] BranchOrPC4_wire;
+wire [31:0] Instruction_wire;
+wire [31:0] Instruction_wire_ID;
+wire [31:0] InmmediateExtend_wire;
 wire [31:0] InmmediateExtendAnded_wire;
 wire [31:0] JumpOrPC4OrBranch_wire;
-wire [31:0] BranchOrPC4_wire;
 wire [31:0] JumpAddrSh2_wire; //Jump address shifted 2 bits
-wire [31:0] BranchAddrSh2_wire;	//Branch address shifted 2 bits
 wire [31:0] JAL_Address_or_ALU_Result_wire;
 wire [31:0] JumpAddr;
-wire [31:0] BranchToPC_wire;
+wire [31:0] JOrPC4OrBranchOrJR_wire;
+wire [31:0] LinkOrWord_wire;
+wire [31:0] MUX_PC_wire;
 wire [31:0] MemOut_wire;
 wire [31:0] MemOrAlu_wire;
-wire [31:0] LinkOrWord_wire;
+wire [31:0] PC_wire;
+wire [31:0] PC_4_wire;
+wire [31:0] ReadData1_wire;
+wire [31:0] ReadData2_wire;
+wire [31:0] ReadData2OrInmmediate_wire;
+
 integer ALUStatus;
 
 
@@ -166,7 +170,7 @@ JumpShifter
 Adder32bits
 JumpAddr_4
 (
-	.Data0(32'hFFC00000), //complemento a 2 de 00400000 para 
+	.Data0(32'hFFC00000), //complemento a 2 de 00400000 para
 	.Data1({PC_4_wire[31:28], JumpAddrSh2_wire[27:0]}),
 
 	.Result(JumpAddr)
@@ -291,8 +295,8 @@ Register_File
 	.reset(reset),
 	.RegWrite(RegWrite_wire),
 	.WriteRegister(RAorWriteReg_wire),
-	.ReadRegister1(Instruction_wire[25:21]),
-	.ReadRegister2(Instruction_wire[20:16]),
+	.ReadRegister1(Instruction_wire_ID[25:21]),
+	.ReadRegister2(Instruction_wire_ID[20:16]),
 	.WriteData(JAL_Address_or_ALU_Result_wire),
 	.ReadData1(ReadData1_wire),
 	.ReadData2(ReadData2_wire)
@@ -302,7 +306,7 @@ Register_File
 SignExtend
 SignExtendForConstants
 (
-	.DataInput(Instruction_wire[15:0]),
+	.DataInput(Instruction_wire_ID[15:0]),
    .SignExtendOutput(InmmediateExtend_wire)
 );
 
@@ -375,6 +379,20 @@ MUX_MemtoReg
 );
 
 assign ALUResultOut = ALUResult_wire;
+
+Pipe
+#(
+.N(64)
+)
+IF_ID_Pipe
+(
+.clk(clk),
+.reset(reset),
+.enable(1),
+.DataInput({PC_4_wire, Instruction_wire}),
+.DataOutput(Intercnection_wire[N-1:0])
+);
+
 
 
 endmodule
