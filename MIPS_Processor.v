@@ -92,6 +92,33 @@ wire [31:0] ReadData1_wire;
 wire [31:0] ReadData2_wire;
 wire [31:0] ReadData2OrInmmediate_wire;
 
+wire [173:0] MEM_wire;
+wire [31:0] ReadData1_wire_MEM;
+wire JR_wire_MEM;
+wire [31:0] JumpAddr_MEM;
+wire BranchNE_wire_MEM;
+wire BranchEQ_wire_MEM;
+wire RegWrite_wire_MEM;
+wire Jump_wire_MEM;
+wire MemRead_wire_MEM;
+wire MemtoReg_wire_MEM;
+wire MemWrite_wire_MEM;
+wire [31:0] BranchToPC_wire_MEM;
+wire Zero_wire_MEM;
+wire [31:0] ALUResult_wire_MEM;
+wire [31:0] ReadData2_wire_MEM;
+wire [4:0] WriteRegister_wire_MEM;
+
+wire [103:0] WB_wire;
+wire MemtoReg_wire_WB;
+wire [31:0] JOrPC4OrBranchOrJR_wire_WB;
+wire RegWrite_wire_WB;
+wire Jump_wire_WB;
+wire [31:0] MemOut_wire_WB;
+wire [31:0] ALUResult_wire_WB;
+wire [4:0] WriteRegister_wire_WB;
+
+
 wire [63:0] ID_wire;
 wire [187:0] EX_wire;
 
@@ -236,9 +263,9 @@ MUX_ForBranch
 Multiplexer2to1
 #(
 	.NBits(32)
+)
 MUX_ForJump
 (
-)
 	.Selector(Jump_wire_MEM),
 	.MUX_Data0(BranchOrPC4_wire),
 	.MUX_Data1(JumpAddr_MEM),
@@ -340,7 +367,7 @@ Multiplexer2to1
 MUX_ForReadDataAndInmediate
 (
 	.Selector(ALUSrc_wire_EX),
-	.MUX_Data0(ReadData2_wire_EX,
+	.MUX_Data0(ReadData2_wire_EX),
 	.MUX_Data1(InmmediateExtend_wire_EX),
 
 	.MUX_Output(ReadData2OrInmmediate_wire)
@@ -411,7 +438,7 @@ IF_ID_Pipe
 .reset(reset),
 .enable(1),
 .DataInput({PC_4_wire, Instruction_wire}),
-.DataOutput(ID_wire[N-1:0])
+.DataOutput(ID_wire)
 );
 
 assign PC_4_wire_ID = ID_wire [63:32];
@@ -431,9 +458,9 @@ ID_EX_Pipe
 );
 
 assign shamt_EX = EX_wire[4:0];
-assign RD_wire_EX = EX_wire[5:9];
+assign RD_wire_EX = EX_wire[9:5];
 assign RT_wire_EX = EX_wire[14:10];
-assign InmmediateExtend_wire = EX_wire[46:15];
+assign InmmediateExtend_wire_EX = EX_wire[46:15];
 assign ReadData1_wire_EX = EX_wire[78:47];
 assign ReadData2_wire_EX = EX_wire[110:79];
 assign MemWrite_wire_EX = EX_wire[111];
@@ -447,7 +474,7 @@ assign BranchEQ_wire_EX = EX_wire[121];
 assign BranchNE_wire_EX = EX_wire[122];
 assign RegDst_wire_EX = EX_wire[123];
 assign PC_4_wire_EX = EX_wire[155:124];
-assign JumpAddr_EX = EX_wire[187:156]
+assign JumpAddr_EX = EX_wire[187:156];
 
 Pipe
 #(
@@ -461,22 +488,7 @@ EX_MEM_Pipe
 .DataInput({ReadData1_wire_EX, JR_wire, JumpAddr_EX, BranchNE_wire_EX, BranchEQ_wire_EX, RegWrite_wire_EX, Jump_wire_EX, MemRead_wire_EX, MemtoReg_wire_EX, MemWrite_wire_EX, BranchToPC_wire, Zero_wire, ALUResult_wire, ReadData2_wire_EX, WriteRegister_wire}),
 .DataOutput(MEM_wire)
 );
-wire [173:0] MEM_wire;
-wire [31:0] ReadData1_wire_MEM;
-wire JR_wire_MEM;
-wire [31:0] JumpAddr_MEM;
-wire BranchNE_wire_MEM;
-wire BranchEQ_wire_MEM;
-wire RegWrite_wire_MEM;
-wire Jump_wire_MEM;
-wire MemRead_wire_MEM;
-wire MemtoReg_wire_MEM;
-wire MemWrite_wire_MEM;
-wire [31:0] BranchToPC_wire_MEM;
-wire Zero_wire_MEM;
-wire [31:0] ALUResult_wire_MEM;
-wire [31:0] ReadData2_wire_MEM;
-wire [4:0] WriteRegister_wire_MEM;
+
 
 assign ReadData1_wire_MEM = MEM_wire[173:142];
 assign JR_wire_MEM = MEM_wire[141];
@@ -506,14 +518,6 @@ MEM_WB_Pipe
 .DataInput({MemtoReg_wire_MEM, JOrPC4OrBranchOrJR_wire, RegWrite_wire_MEM, Jump_wire_MEM, MemOut_wire, ALUResult_wire_MEM, WriteRegister_wire_MEM}),
 .DataOutput(WB_wire)
 );
-wire [103:0] WB_wire;
-wire MemtoReg_wire_WB;
-wire [31:0] JOrPC4OrBranchOrJR_wire_WB;
-wire RegWrite_wire_WB;
-wire Jump_wire_WB;
-wire [31:0] MemOut_wire_WB;
-wire [31:0] ALUResult_wire_WB;
-wire [4:0] WriteRegister_wire_WB;
 
 assign MemtoReg_wire_WB = WB_wire[103];
 assign JOrPC4OrBranchOrJR_wire_WB = WB_wire[102:71];
