@@ -166,7 +166,7 @@ ControlUnit
 	.BranchEQ(BranchEQ_wire),
 	.ALUOp(ALUOp_wire),
 	.ALUSrc(ALUSrc_wire),
-	.RegWrite(RegWrite_wire_WB),
+	.RegWrite(RegWrite_wire),
 	.Jump(Jump_wire),
 	.MemRead(MemRead_wire),
 	.MemtoReg(MemtoReg_wire),
@@ -230,7 +230,7 @@ JumpAddr_4
 ShiftLeft2
 BranchShifter
 (
-	 .DataInput({6'b0,InmmediateExtend_wire[15:0]}),  ////{6'b0,InmmediateExtend_wire[15:0]
+	 .DataInput({6'b0,InmmediateExtend_wire_EX[15:0]}),
    .DataOutput(BranchAddrSh2_wire)
 );
 
@@ -341,7 +341,7 @@ Register_File
 (
 	.clk(clk),
 	.reset(reset),
-	.RegWrite(RegWrite_wire),
+	.RegWrite(RegWrite_wire_WB),
 	.WriteRegister(RAorWriteReg_wire),
 	.ReadRegister1(Instruction_wire_ID[25:21]),
 	.ReadRegister2(Instruction_wire_ID[20:16]),
@@ -379,7 +379,7 @@ ALUControl
 ArithmeticLogicUnitControl
 (
 	.ALUOp(ALUOp_wire_EX),
-	.ALUFunction(Instruction_wire[5:0]),
+	.ALUFunction(InmmediateExtend_wire_EX[5:0]),
 	.ALUOperation(ALUOperation_wire),
 	.JR(JR_wire)
 );
