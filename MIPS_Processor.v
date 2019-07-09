@@ -166,7 +166,7 @@ ControlUnit
 	.BranchEQ(BranchEQ_wire),
 	.ALUOp(ALUOp_wire),
 	.ALUSrc(ALUSrc_wire),
-	.RegWrite(RegWrite_wire),
+	.RegWrite(RegWrite_wire_WB),
 	.Jump(Jump_wire),
 	.MemRead(MemRead_wire),
 	.MemtoReg(MemtoReg_wire),
