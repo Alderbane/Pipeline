@@ -14,6 +14,7 @@
 module Control
 (
 	input [5:0]OP,
+	input [5:0] ALUFunction,
 	output Jump,
 	output RegDst,
 	output BranchEQ,
@@ -23,8 +24,10 @@ module Control
 	output MemWrite,
 	output ALUSrc,
 	output RegWrite,
-	output [3:0]ALUOp
+	output [3:0]ALUOp,
+	output JR_wire
 );
+
 localparam R_Type = 0;
 localparam I_Type_ADDI = 6'h8;
 localparam I_Type_ORI = 6'h0d;
@@ -67,6 +70,12 @@ assign MemWrite = ControlValues[6];
 assign BranchNE = ControlValues[5];
 assign BranchEQ = ControlValues[4];
 assign ALUOp = ControlValues[3:0];
+
+wire [9:0] Selector;
+
+assign Selector = {OP, ALUFunction};
+
+assign JR = (Selector == R_Type_JR)? 1'b1: 1'b0;
 
 
 endmodule

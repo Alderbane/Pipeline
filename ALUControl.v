@@ -16,8 +16,7 @@ module ALUControl
 (
 	input [3:0] ALUOp,
 	input [5:0] ALUFunction,
-	output [3:0] ALUOperation,
-	output	JR
+	output [3:0] ALUOperation
 );
 
 localparam R_Type_AND    		= 10'b0111_100100;
@@ -63,7 +62,6 @@ always@(Selector)begin
 	endcase
 end
 
-assign JR = (Selector == R_Type_JR)? 1'b1: 1'b0;
 assign ALUOperation = ALUControlValues;
 
 endmodule
