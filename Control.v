@@ -25,7 +25,7 @@ module Control
 	output ALUSrc,
 	output RegWrite,
 	output [3:0]ALUOp,
-	output JR_wire
+	output JR
 );
 
 localparam R_Type = 0;
@@ -39,6 +39,7 @@ localparam I_Type_SW = 6'h2b;
 localparam J_Type_J	= 6'h02;
 localparam J_Type_JAL	= 6'h03;
 localparam I_Type_LUI = 6'h0f;
+localparam R_Type_JR = 10'b0111_000100;
 
 reg [12:0] ControlValues;
 

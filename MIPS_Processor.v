@@ -163,7 +163,7 @@ Control
 ControlUnit
 (
 	.OP(Instruction_wire_ID[31:26]),
-	.ALUFunction(Instruction_wire_ID[5:0])
+	.ALUFunction(Instruction_wire_ID[5:0]),
 	.RegDst(RegDst_wire),
 	.BranchNE(BranchNE_wire),
 	.BranchEQ(BranchEQ_wire),
@@ -174,7 +174,7 @@ ControlUnit
 	.MemRead(MemRead_wire),
 	.MemtoReg(MemtoReg_wire),
 	.MemWrite(MemWrite_wire),
-	.JR(JR_wire)
+	.JR(JR)
 	);
 
  PC_Register
@@ -389,12 +389,12 @@ SubstractToMemoryAddress
 	.Result(MemoryAddressx4_wire)
 );
 
-assign wire [31:0] MemoryAddress_wire; = {1'b0, 1'b0, MemoryAddressx4_wire[31:2]};
+assign MemoryAddress_wire = {1'b0, 1'b0, MemoryAddressx4_wire[31:2]};
 
 
 DataMemory
 #(
-	.DATA_WIDTH(32)
+	.DATA_WIDTH(32),
 	.MEMORY_DEPTH(1024)
 )
 Memory
