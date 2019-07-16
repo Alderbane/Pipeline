@@ -59,8 +59,9 @@ wire [3:0] ALUOperation_wire;
 wire [3:0] ALUOp_wire_EX;
 wire [4:0] WriteRegister_wire;
 wire [4:0] RAorWriteReg_wire;
-wire [4:0] RT_I_wire_EX;
-wire [4:0] RD_R_wire_EX;
+wire [4:0] RT_wire_EX;
+wire [4:0] RD_wire_EX;
+wire [4:0] RS_wire_EX;
 wire [4:0] shamt_EX;
 
 
@@ -344,8 +345,8 @@ ALU
 Arithmetic_Logic_Unit
 (
 	.ALUOperation(ALUOperation_wire),
-	.A(ReadData1_wire_EX),
-	.B(ReadData2OrInmmediate_wire),
+	.A(MUXFwdA_wire),
+	.B(MUXFwdB_wire),
 	.shamt(shamt_EX),
 	.Zero(Zero_wire),
 	.ALUResult(ALUResult_wire)
@@ -374,8 +375,8 @@ Multiplexer2to1
 MUX_ForRTypeAndIType
 (
 	.Selector(RegDst_wire_EX),
-	.MUX_Data0(RT_I_wire_EX),
-	.MUX_Data1(RD_R_wire_EX),
+	.MUX_Data0(RT_wire_EX),
+	.MUX_Data1(RD_wire_EX),
 
 	.MUX_Output(WriteRegister_wire)
 
@@ -477,20 +478,20 @@ assign Instruction_wire_ID = ID_wire [31:0];
 
 Pipe
 #(
-.N(189)
+.N(194)
 )
 ID_EX_Pipe
 (
 .clk(clk),
 .reset(reset),
 .enable(1'b1),
-.DataInput({JR_wire, JumpAddr, PC_4_wire_ID, RegDst_wire, BranchNE_wire, BranchEQ_wire, ALUOp_wire, ALUSrc_wire, RegWrite_wire, Jump_wire, MemRead_wire, MemtoReg_wire, MemWrite_wire, ReadData1_wire, ReadData2_wire, InmmediateExtend_wire, Instruction_wire_ID[20:16], Instruction_wire_ID[15:11], Instruction_wire_ID[10:6]}),
+.DataInput({Instruction_wire_ID[25:21], JR_wire, JumpAddr, PC_4_wire_ID, RegDst_wire, BranchNE_wire, BranchEQ_wire, ALUOp_wire, ALUSrc_wire, RegWrite_wire, Jump_wire, MemRead_wire, MemtoReg_wire, MemWrite_wire, ReadData1_wire, ReadData2_wire, InmmediateExtend_wire, Instruction_wire_ID[20:16], Instruction_wire_ID[15:11], Instruction_wire_ID[10:6]}),
 .DataOutput(EX_wire)
 );
 
 assign shamt_EX = EX_wire[4:0];
-assign RD_R_wire_EX = EX_wire[9:5];
-assign RT_I_wire_EX = EX_wire[14:10];
+assign RD_wire_EX = EX_wire[9:5];
+assign RT_wire_EX = EX_wire[14:10];
 assign InmmediateExtend_wire_EX = EX_wire[46:15];
 assign ReadData2_wire_EX = EX_wire[78:47];
 assign ReadData1_wire_EX = EX_wire[110:79];
@@ -507,6 +508,7 @@ assign RegDst_wire_EX = EX_wire[123];
 assign PC_4_wire_EX = EX_wire[155:124];
 assign JumpAddr_EX = EX_wire[187:156];
 assign JR_wire_EX = EX_wire[188];
+assign RS_wire_EX = EX_wire[193:189];
 
 Pipe
 #(
@@ -517,7 +519,7 @@ EX_MEM_Pipe
 .clk(clk),
 .reset(reset),
 .enable(1'b1),
-.DataInput({ReadData1_wire_EX, JR_wire_EX, JumpAddr_EX, BranchNE_wire_EX, BranchEQ_wire_EX, RegWrite_wire_EX, Jump_wire_EX, MemRead_wire_EX, MemtoReg_wire_EX, MemWrite_wire_EX, BranchToPC_wire, Zero_wire, ALUResult_wire, ReadData2_wire_EX, WriteRegister_wire}),
+.DataInput({ReadData1_wire_EX, JR_wire_EX, JumpAddr_EX, BranchNE_wire_EX, BranchEQ_wire_EX, RegWrite_wire_EX, Jump_wire_EX, MemRead_wire_EX, MemtoReg_wire_EX, MemWrite_wire_EX, BranchToPC_wire, Zero_wire, ALUResult_wire, MUXFwdB_wire, WriteRegister_wire}),
 .DataOutput(MEM_wire)
 );
 
@@ -558,5 +560,81 @@ assign Jump_wire_WB = WB_wire[69];
 assign MemOut_wire_WB = WB_wire[68:37];
 assign ALUResult_wire_WB = WB_wire[36:5];
 assign WriteRegister_wire_WB = WB_wire[4:0];
+
+wire [1:0] A;
+wire [1:0] B;
+
+ForwardingUnit
+FwdUnit
+(
+	.WB_WB(RegWrite_wire_WB),
+	.WB_MEM(RegWrite_wire_MEM),
+	.RS_EX(RS_wire_EX),
+	.RT_EX(RT_wire_EX),
+	.RTorRD_MEM(WriteRegister_wire_MEM),
+	.RTorRD_WB(WriteRegister_wire_WB),
+	.A(A),
+	.B(B)
+	
+);
+
+
+wire [31:0] MUXFwdA1to2_wire;
+wire [31:0] MUXFwdA_wire;
+wire [31:0] MUXFwdB1to2_wire;
+wire [31:0] MUXFwdB_wire;
+
+Multiplexer2to1
+#(
+.NBits(32)
+)
+MuxFwdUnitA1
+(
+.Selector(A[0]),
+.MUX_Data0(ALUResult_wire_MEM),
+.MUX_Data1(MemOrAlu_wire),
+.MUX_Output(MUXFwdA1to2_wire)
+);
+
+
+Multiplexer2to1
+#(
+.NBits(32)
+)
+MuxFwdUnitA2
+(
+.Selector(A[1]),
+.MUX_Data0(ReadData1_wire_EX),
+.MUX_Data1(MUXFwdA1to2_wire),
+.MUX_Output(MUXFwdA_wire) //usar este para sustituir
+);
+
+
+Multiplexer2to1
+#(
+.NBits(32)
+)
+MuxFwdUnitB1
+(
+.Selector(B[0]),
+.MUX_Data0(ALUResult_wire_MEM),
+.MUX_Data1(MemOrAlu_wire),
+.MUX_Output(MUXFwdB1to2_wire)
+);
+
+
+Multiplexer2to1
+#(
+.NBits(32)
+)
+MuxFwdUnitB2
+(
+.Selector(B[1]),
+.MUX_Data0(ReadData2OrInmmediate_wire),
+.MUX_Data1(MUXFwdB1to2_wire),
+.MUX_Output(MUXFwdB_wire)
+);
+
+
 
 endmodule

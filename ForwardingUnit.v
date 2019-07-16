@@ -1,8 +1,5 @@
 
 module ForwardingUnit
-#(
-	parameter N=32
-)
 (
 	input [4:0] WB_WB,
 	input [4:0] WB_MEM,
@@ -15,8 +12,13 @@ module ForwardingUnit
 	
 );
 
-assign A = (1)? 0:0;
+assign A = 	(RS_EX == RTorRD_MEM && WB_MEM == 1'b1)?		2'b10:
+				(RS_EX == RTorRD_WB && WB_WB == 1'b1)?			2'b11:
+																			2'b00;
 
+assign B = 	(RT_EX == RTorRD_MEM && WB_MEM == 1'b1)?		2'b10:
+				(RT_EX == RTorRD_WB && WB_WB == 1'b1)?			2'b11:
+																			2'b00;
 
 endmodule
 //muxregfile//
