@@ -128,8 +128,9 @@ wire [187:0] EX_wire;
 integer ALUStatus;
 
 
-//**********************/
-//**********************/
+//|||||||||||||||||||||||||||||||||||||||||||||||\\
+//||||||||||||||CompuertasLogicas|||||||||||||||//
+//|||||||||||||||||||||||||||||||||||||||||||||||\\
 
 ANDGate
 Gate_BranchEQANDZero
@@ -139,7 +140,7 @@ Gate_BranchEQANDZero
 	.C(ZeroANDBrachEQ)
 );
 
-//**********************/
+//-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o
 
 ANDGate
 Gate_BranchNEANDZero
@@ -149,7 +150,7 @@ Gate_BranchNEANDZero
 	.C(NotZeroANDBrachNE)
 );
 
-//**********************/
+//-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o
 
 ORGate
 Gate_BeqOrBNE
@@ -159,31 +160,16 @@ Gate_BeqOrBNE
 	.C(ORForBranch)
 );
 
-//**********************/
-Control
-ControlUnit
-(
-	.OP(Instruction_wire_ID[31:26]),
-	.ALUFunction(Instruction_wire_ID[5:0]),
-	.RegDst(RegDst_wire),
-	.BranchNE(BranchNE_wire),
-	.BranchEQ(BranchEQ_wire),
-	.ALUOp(ALUOp_wire),
-	.ALUSrc(ALUSrc_wire),
-	.RegWrite(RegWrite_wire),
-	.Jump(Jump_wire),
-	.MemRead(MemRead_wire),
-	.MemtoReg(MemtoReg_wire),
-	.MemWrite(MemWrite_wire),
-	.JR(JR)
-	);
 
- PC_Register
+//|||||||||||||||||||||||||||||||||||||||||||||||\\
+//||||||||||||||IF:IntructionFetch|||||||||||||||//
+//|||||||||||||||||||||||||||||||||||||||||||||||\\
+
+PC_Register
 #(
-	.N(32)
+ .N(32)
 )
 
-//-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o
 ProgramCounter
 (
 	.clk(clk),
@@ -212,43 +198,27 @@ PC_Puls_4
 	.Result(PC_4_wire)
 );
 
-//-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o
+//-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o
 
-ShiftLeft2
-JumpShifter
+Control
+ControlUnit
 (
-	.DataInput({6'b0,Instruction_wire_ID[25:0]}),
-   .DataOutput(JumpAddrSh2_wire)
-);
+	.OP(Instruction_wire_ID[31:26]),
+	.ALUFunction(Instruction_wire_ID[5:0]),
+	.RegDst(RegDst_wire),
+	.BranchNE(BranchNE_wire),
+	.BranchEQ(BranchEQ_wire),
+	.ALUOp(ALUOp_wire),
+	.ALUSrc(ALUSrc_wire),
+	.RegWrite(RegWrite_wire),
+	.Jump(Jump_wire),
+	.MemRead(MemRead_wire),
+	.MemtoReg(MemtoReg_wire),
+	.MemWrite(MemWrite_wire),
+	.JR(JR)
+	);
 
-Adder32bits
-JumpAddr_4
-(
-	.Data0(32'hFFC00000), //complemento a 2 de 00400000 para
-	.Data1({PC_4_wire_ID[31:28], JumpAddrSh2_wire[27:0]}),
-
-	.Result(JumpAddr)
-);
-
-//-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o
-
-ShiftLeft2
-BranchShifter
-(
-	 .DataInput(InmmediateExtend_wire_EX),
-   .DataOutput(BranchAddrSh2_wire)
-);
-
-Adder32bits
-BranchAddr_4
-(
-	.Data0(PC_4_wire_EX),
-	.Data1(BranchAddrSh2_wire),
-
-	.Result(BranchToPC_wire)
-);
-
-//-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o
+//-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o
 
 Multiplexer2to1
 #(
@@ -263,7 +233,6 @@ MUX_ForBranch
 	.MUX_Output(BranchOrPC4_wire)
 
 );
-
 
 Multiplexer2to1
 #(
@@ -293,17 +262,10 @@ MUX_ForJumpRegister
 
 );
 
-//**********************/
-//**********************/
-//**********************/
-//**********************/
-//**********************/
-//||||||||IF:IntructionFetch|||||||||//
 
-
-
-
-//||||||||ID:RegisterFile|||||||||//
+//||||||||||||||||||||||||||||||||||||||||||||\\
+//||||||||||||||ID:RegisterFile|||||||||||||||//
+//||||||||||||||||||||||||||||||||||||||||||||\\
 
 RegisterFile
 Register_File
@@ -320,6 +282,8 @@ Register_File
 
 );
 
+//-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o
+
 SignExtend
 SignExtendForConstants
 (
@@ -327,9 +291,46 @@ SignExtendForConstants
    .SignExtendOutput(InmmediateExtend_wire)
 );
 
+//-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o
+
+ShiftLeft2
+JumpShifter
+(
+	.DataInput({6'b0,Instruction_wire_ID[25:0]}),
+   .DataOutput(JumpAddrSh2_wire)
+);
+
+Adder32bits
+JumpAddr_4
+(
+	.Data0(32'hFFC00000), //complemento a 2 de 00400000 para
+	.Data1({PC_4_wire_ID[31:28], JumpAddrSh2_wire[27:0]}),
+
+	.Result(JumpAddr)
+);
+
+//-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o
+
+ShiftLeft2
+BranchShifter
+(
+	 .DataInput(InmmediateExtend_wire_EX),
+   .DataOutput(BranchAddrSh2_wire)
+);
+
+Adder32bits
+BranchAddr_4
+(
+	.Data0(PC_4_wire_EX),
+	.Data1(BranchAddrSh2_wire),
+
+	.Result(BranchToPC_wire)
+);
 
 
-//||||||||EX:Execute|||||||||//
+//|||||||||||||||||||||||||||||||||||||||\\
+//||||||||||||||EX:Execute|||||||||||||||//
+//|||||||||||||||||||||||||||||||||||||||\\
 
 ALUControl
 ArithmeticLogicUnitControl
@@ -340,6 +341,7 @@ ArithmeticLogicUnitControl
 
 );
 
+//-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o
 
 ALU
 Arithmetic_Logic_Unit
@@ -353,6 +355,8 @@ Arithmetic_Logic_Unit
 );
 
 assign ALUResultOut = ALUResult_wire;
+
+//-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o
 
 Multiplexer2to1
 #(
@@ -383,7 +387,9 @@ MUX_ForRTypeAndIType
 );
 
 
-//||||||||MEM:Memory|||||||||//
+//|||||||||||||||||||||||||||||||||||||||\\
+//||||||||||||||MEM:Memory|||||||||||||||//
+//|||||||||||||||||||||||||||||||||||||||\\
 
 Adder32bits
 SubstractToMemoryAddress
@@ -413,7 +419,9 @@ Memory
 );
 
 
-//||||||||WB:WriteBack|||||||||//
+//|||||||||||||||||||||||||||||||||||||||||\\
+//||||||||||||||WB:WriteBack|||||||||||||||//
+//|||||||||||||||||||||||||||||||||||||||||\\
 
 Multiplexer2to1
 #(
@@ -431,20 +439,6 @@ MUX_MemtoReg
 
 Multiplexer2to1
 #(
-	.NBits(32)
-)
-MUX_JAL_address_Or_ALU_Result
-(
-	.Selector(Jump_wire_WB),
-	.MUX_Data0(MemOrAlu_wire),
-	.MUX_Data1(JOrPC4OrBranchOrJR_wire_WB),
-
-	.MUX_Output(JAL_Address_or_ALU_Result_wire)
-
-);
-
-Multiplexer2to1
-#(
 	.NBits(5)
 )
 MUX_ForJalorRorIType
@@ -457,9 +451,24 @@ MUX_ForJalorRorIType
 
 );
 
+Multiplexer2to1
+#(
+	.NBits(32)
+)
+MUX_JAL_address_Or_ALU_Result
+(
+	.Selector(Jump_wire_WB),
+	.MUX_Data0(MemOrAlu_wire),
+	.MUX_Data1(JOrPC4OrBranchOrJR_wire_WB),
 
+	.MUX_Output(JAL_Address_or_ALU_Result_wire)
+
+);
+
+
+//||||||||||||||||||||||\\
 //||||||||PIPES|||||||||//
-
+//||||||||||||||||||||||\\
 Pipe
 #(
 .N(64)
@@ -575,7 +584,7 @@ FwdUnit
 	.RTorRD_WB(WriteRegister_wire_WB),
 	.A(A),
 	.B(B)
-	
+
 );
 
 
