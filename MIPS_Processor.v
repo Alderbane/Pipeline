@@ -178,7 +178,6 @@ ProgramCounter
 	.PCValue(PC_wire)
 );
 
-
 ProgramMemory
 #(
 	.MEMORY_DEPTH(MEMORY_DEPTH)
@@ -197,26 +196,6 @@ PC_Puls_4
 
 	.Result(PC_4_wire)
 );
-
-//-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o
-
-Control
-ControlUnit
-(
-	.OP(Instruction_wire_ID[31:26]),
-	.ALUFunction(Instruction_wire_ID[5:0]),
-	.RegDst(RegDst_wire),
-	.BranchNE(BranchNE_wire),
-	.BranchEQ(BranchEQ_wire),
-	.ALUOp(ALUOp_wire),
-	.ALUSrc(ALUSrc_wire),
-	.RegWrite(RegWrite_wire),
-	.Jump(Jump_wire),
-	.MemRead(MemRead_wire),
-	.MemtoReg(MemtoReg_wire),
-	.MemWrite(MemWrite_wire),
-	.JR(JR)
-	);
 
 //-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o
 
@@ -241,8 +220,8 @@ Multiplexer2to1
 MUX_ForJump
 (
 	.Selector(Jump_wire_MEM),
-	.MUX_Data0(BranchOrPC4_wire),
-	.MUX_Data1(JumpAddr_MEM),
+	.MUX_Data0(JumpAddr_MEM),
+	.MUX_Data1(BranchOrPC4_wire),
 
 	.MUX_Output(JumpOrPC4OrBranch_wire)
 
@@ -255,8 +234,8 @@ Multiplexer2to1
 MUX_ForJumpRegister
 (
 	.Selector(JR_wire_MEM),
-	.MUX_Data0(JumpOrPC4OrBranch_wire),
-	.MUX_Data1(ReadData1_wire_MEM),
+	.MUX_Data0(ReadData1_wire_MEM),
+	.MUX_Data1(JumpOrPC4OrBranch_wire),
 
 	.MUX_Output(JOrPC4OrBranchOrJR_wire)
 
@@ -281,6 +260,26 @@ Register_File
 	.ReadData2(ReadData2_wire)
 
 );
+
+//-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o
+
+Control
+ControlUnit
+(
+	.OP(Instruction_wire_ID[31:26]),
+	.ALUFunction(Instruction_wire_ID[5:0]),
+	.RegDst(RegDst_wire),
+	.BranchNE(BranchNE_wire),
+	.BranchEQ(BranchEQ_wire),
+	.ALUOp(ALUOp_wire),
+	.ALUSrc(ALUSrc_wire),
+	.RegWrite(RegWrite_wire),
+	.Jump(Jump_wire),
+	.MemRead(MemRead_wire),
+	.MemtoReg(MemtoReg_wire),
+	.MemWrite(MemWrite_wire),
+	.JR(JR)
+	);
 
 //-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o
 
@@ -458,8 +457,8 @@ Multiplexer2to1
 MUX_JAL_address_Or_ALU_Result
 (
 	.Selector(Jump_wire_WB),
-	.MUX_Data0(MemOrAlu_wire),
-	.MUX_Data1(JOrPC4OrBranchOrJR_wire_WB),
+	.MUX_Data0(PC_4_wire),
+	.MUX_Data1(MemOrAlu_wire)),
 
 	.MUX_Output(JAL_Address_or_ALU_Result_wire)
 
