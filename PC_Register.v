@@ -1,6 +1,6 @@
 /******************************************************************
 * Description
-*	This is a register of 32-bit that corresponds to the PC counter. 
+*	This is a register of 32-bit that corresponds to the PC counter.
 *	This register does not have an enable signal.
 * Version:
 *	1.0
@@ -20,15 +20,17 @@ module PC_Register
 	input clk,
 	input reset,
 	input  [N-1:0] NewPC,
-	
-	
+	input enable,
+
 	output reg [N-1:0] PCValue
 );
 
 always@(negedge reset or posedge clk) begin
 	if(reset==0)
 		PCValue <= 0;
-	else	
+	else if(enable == 1)
+	 PCValue <= PCValue
+	else
 		PCValue<=NewPC;
 end
 
