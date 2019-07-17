@@ -20,7 +20,7 @@ module PC_Register
 	input clk,
 	input reset,
 	input  [N-1:0] NewPC,
-	input disable,
+	input enable,
 
 	output reg [N-1:0] PCValue
 );
