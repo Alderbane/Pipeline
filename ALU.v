@@ -23,7 +23,6 @@ module ALU
 	input [31:0] A,
 	input [31:0] B,
 	input [4:0] shamt,
-	output reg Zero,
 	output reg [31:0]ALUResult
 );
 
@@ -58,7 +57,7 @@ localparam LUI = 4'b0111;
 		default:
 			ALUResult= 0;
 		endcase // case(control)
-		Zero = (ALUResult==0) ? 1'b1 : 1'b0;
+		
      end // always @ (A or B or control)
 endmodule
 // alu//
