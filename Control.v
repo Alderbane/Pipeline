@@ -25,7 +25,8 @@ module Control
 	output ALUSrc,
 	output RegWrite,
 	output [3:0]ALUOp,
-	output JR
+	output JR,
+	output IFFlush
 );
 
 localparam R_Type = 0;
@@ -78,6 +79,7 @@ assign Selector = {OP, ALUFunction};
 
 assign JR = (Selector == R_Type_JR)? 1'b1: 1'b0;
 
+assign IFFlush = J | JR;
 
 endmodule
 //control//
