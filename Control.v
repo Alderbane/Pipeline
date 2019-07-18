@@ -79,7 +79,7 @@ assign Selector = {OP, ALUFunction};
 
 assign JR = (Selector == R_Type_JR)? 1'b1: 1'b0;
 
-assign IFFlush = J | JR;
+assign IFFlush = Jump | JR;
 
 endmodule
 //control//

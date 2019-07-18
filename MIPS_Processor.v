@@ -57,8 +57,8 @@ wire BranchEQ_wire_EX;
 wire PCEnable_Wire;
 wire IFFlush_wire;
 wire IFFlushOrBranch_wire;
-wire DEnable_Wire
-wire JR_wire_MEM
+wire DEnable_Wire;
+wire JR_wire_MEM;
 wire BranchNE_wire_MEM;
 wire BranchEQ_wire_MEM;
 wire RegWrite_wire_MEM;
@@ -129,9 +129,9 @@ wire [31:0] PC_4_wire_MEM;
 wire [31:0] PC_4_wire_WB;
 
 wire [63:0] ID_wire;
-wire [103:0] WB_wire;
-wire [173:0] MEM_wire;
-wire [187:0] EX_wire;
+wire [135:0] WB_wire;
+wire [204:0] MEM_wire;
+wire [193:0] EX_wire;
 
 integer ALUStatus;
 
@@ -146,7 +146,7 @@ Gate_BranchORIFFlush
 	.A(IFFlush_wire),
 	.B(ORForBranch),
 	.C(IFFlushOrBranch_wire)
-)
+);
 
 //|||||||||||||||||||||||||||||||||||||||||||||||\\
 //||||||||||||||IF:IntructionFetch|||||||||||||||//
@@ -161,7 +161,7 @@ ProgramCounter
 	.clk(clk),
 	.reset(reset),
 	.NewPC(JOrPC4OrBranchOrJR_wire),
-	.enable(PCEnable_Wire)
+	.enable(PCEnable_Wire),
 	.PCValue(PC_wire)
 );
 
@@ -344,12 +344,12 @@ JumpAddr_4
 assign Control_wire = {JR_wire, RegDst_wire, BranchNE_wire, BranchEQ_wire, ALUOp_wire, ALUSrc_wire, RegWrite_wire, Jump_wire, MemRead_wire, MemtoReg_wire, MemWrite_wire};
 
 Multiplexer2to1
-(
+#(
 .NBits(11)
 )
 MUXControlHDU
 (
-x.Selector(Bubble_wire),  //HDU Selector
+.Selector(Bubble_wire),  //HDU Selector
 .MUX_Data0(Control_wire),
 .MUX_Data1(11'b0),
 .MUX_Output(Control_wire_ID)
@@ -562,7 +562,7 @@ MUX_JAL_address_Or_ALU_Result
 (
 	.Selector(Jump_wire_WB),
 	.MUX_Data0(PC_4_wire_WB),
-	.MUX_Data1(MemOrAlu_wire)),
+	.MUX_Data1(MemOrAlu_wire),
 
 	.MUX_Output(JAL_Address_or_ALU_Result_wire)
 

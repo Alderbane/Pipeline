@@ -20,8 +20,8 @@ module Equals
 );
 
 wire Zero;
-Wire ZeroANDBrachEQ;
-Wire NotZeroANDBrachNE;
+wire ZeroANDBrachEQ;
+wire NotZeroANDBrachNE;
 
 assign Zero = (ReadData1 == ReadData2) ? 1'b1 : 1'b0;
 

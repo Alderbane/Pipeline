@@ -28,8 +28,8 @@ module PC_Register
 always@(negedge reset or negedge clk) begin
 	if(reset==0)
 		PCValue <= 0;
-	else if(enable == 1)
-	 PCValue <= PCValue
+	else if(enable == 0)
+	 PCValue <= PCValue;
 	else
 		PCValue<=NewPC;
 end

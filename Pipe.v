@@ -24,11 +24,14 @@ module Pipe
 );
 
 always@(negedge reset or negedge clk) begin
-	if(reset==0 || Flush==1)
+	if(reset==0)
 		DataOutput <= 0;
 	else
-		if(enable==1)
-			DataOutput<=DataInput;
+		if(Flush==1)
+			DataOutput <= 0;
+		else
+			if(enable==1)
+				DataOutput<=DataInput;
 end
 
 endmodule
