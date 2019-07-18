@@ -29,6 +29,7 @@ assign  PortOut = 0;
 //**********************/
 //**********************/
 // Data types to connect modules
+
 wire ALUSrc_wire;
 wire BranchNE_wire;
 wire BranchEQ_wire;
@@ -57,6 +58,17 @@ wire PCEnable_Wire;
 wire IFFlush_wire;
 wire IFFlushOrBranch_wire;
 wire DEnable_Wire
+wire JR_wire_MEM
+wire BranchNE_wire_MEM;
+wire BranchEQ_wire_MEM;
+wire RegWrite_wire_MEM;
+wire Jump_wire_MEM;
+wire MemRead_wire_MEM;
+wire MemtoReg_wire_MEM;
+wire MemWrite_wire_MEM;
+wire MemtoReg_wire_WB;
+wire RegWrite_wire_WB;
+wire Jump_wire_WB;
 
 wire [3:0] ALUOp_wire;
 wire [3:0] ALUOperation_wire;
@@ -67,6 +79,8 @@ wire [4:0] RT_wire_EX;
 wire [4:0] RD_wire_EX;
 wire [4:0] RS_wire_EX;
 wire [4:0] shamt_EX;
+wire [4:0] WriteRegister_wire_MEM;
+wire [4:0] WriteRegister_wire_WB;
 
 wire [10:0] Control_wire;
 
@@ -99,36 +113,24 @@ wire [31:0] PC_4_wire_ID;
 wire [31:0] ReadData1_wire;
 wire [31:0] ReadData2_wire;
 wire [31:0] ReadData2OrInmmediate_wire;
-
-wire [173:0] MEM_wire;
+wire [31:0] MUXFwdA1to2_wire;
+wire [31:0] MUXFwdA_wire;
+wire [31:0] MUXFwdB1to2_wire;
+wire [31:0] MUXFwdB_wire;
 wire [31:0] ReadData1_wire_MEM;
-wire JR_wire_MEM;
 wire [31:0] JumpAddr_wire_MEM;
-wire BranchNE_wire_MEM;
-wire BranchEQ_wire_MEM;
-wire RegWrite_wire_MEM;
-wire Jump_wire_MEM;
-wire MemRead_wire_MEM;
-wire MemtoReg_wire_MEM;
-wire MemWrite_wire_MEM;
 wire [31:0] BranchToPC_wire_MEM;
 wire [31:0] ALUResult_wire_MEM;
 wire [31:0] ReadData2_wire_MEM;
-wire [4:0] WriteRegister_wire_MEM;
-
-wire [103:0] WB_wire;
-wire MemtoReg_wire_WB;
 wire [31:0] JOrPC4OrBranchOrJR_wire_WB;
-wire RegWrite_wire_WB;
-wire Jump_wire_WB;
 wire [31:0] MemOut_wire_WB;
 wire [31:0] ALUResult_wire_WB;
-wire [4:0] WriteRegister_wire_WB;
-
 wire [31:0] PC_4_wire_MEM;
 wire [31:0] PC_4_wire_WB;
 
 wire [63:0] ID_wire;
+wire [103:0] WB_wire;
+wire [173:0] MEM_wire;
 wire [187:0] EX_wire;
 
 integer ALUStatus;
@@ -234,7 +236,7 @@ MUX_ForJumpRegister
 Hazard
 HazardUnit
 (
-	.Instruction_ID(Instruction_wire_ID[:]),
+	.Instruction_ID(Instruction_wire_ID[25:16]),
 	.RT_EX(RT_wire_EX),
 	.MemRead_EX(MemRead_wire_EX),
 	.DWrite(DEnable_Wire),
@@ -349,7 +351,7 @@ MUXControlHDU
 (
 x.Selector(Bubble_wire),  //HDU Selector
 .MUX_Data0(Control_wire),
-.MUX_Data1(11'd0),
+.MUX_Data1(11'b0),
 .MUX_Output(Control_wire_ID)
 );
 
@@ -382,6 +384,25 @@ assign ALUResultOut = ALUResult_wire;
 
 //-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o
 
+wire [1:0] A;
+wire [1:0] B;
+
+ForwardingUnit
+FwdUnit
+(
+	.WB_WB(RegWrite_wire_WB),
+	.WB_MEM(RegWrite_wire_MEM),
+	.RS_EX(RS_wire_EX),
+	.RT_EX(RT_wire_EX),
+	.RTorRD_MEM(WriteRegister_wire_MEM),
+	.RTorRD_WB(WriteRegister_wire_WB),
+	.A(A),
+	.B(B)
+
+);
+
+//-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o
+
 Multiplexer2to1
 #(
 	.NBits(32)
@@ -396,6 +417,8 @@ MUX_ForReadDataAndInmediate
 
 );
 
+//-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o
+
 Multiplexer2to1
 #(
 	.NBits(5)
@@ -408,6 +431,62 @@ MUX_ForRTypeAndIType
 
 	.MUX_Output(WriteRegister_wire)
 
+);
+
+//-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o
+
+Multiplexer2to1
+#(
+.NBits(32)
+)
+MuxFwdUnitA1
+(
+.Selector(A[0]),
+.MUX_Data0(ALUResult_wire_MEM),
+.MUX_Data1(MemOrAlu_wire),
+.MUX_Output(MUXFwdA1to2_wire)
+);
+
+//-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o
+
+Multiplexer2to1
+#(
+.NBits(32)
+)
+MuxFwdUnitA2
+(
+.Selector(A[1]),
+.MUX_Data0(ReadData1_wire_EX),
+.MUX_Data1(MUXFwdA1to2_wire),
+.MUX_Output(MUXFwdA_wire) //usar este para sustituir
+);
+
+//-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o
+
+Multiplexer2to1
+#(
+.NBits(32)
+)
+MuxFwdUnitB1
+(
+.Selector(B[0]),
+.MUX_Data0(ALUResult_wire_MEM),
+.MUX_Data1(MemOrAlu_wire),
+.MUX_Output(MUXFwdB1to2_wire)
+);
+
+//-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o
+
+Multiplexer2to1
+#(
+.NBits(32)
+)
+MuxFwdUnitB2
+(
+.Selector(B[1]),
+.MUX_Data0(ReadData2OrInmmediate_wire),
+.MUX_Data1(MUXFwdB1to2_wire),
+.MUX_Output(MUXFwdB_wire)
 );
 
 
@@ -509,7 +588,6 @@ IF_ID_Pipe
 );
 
 
-
 assign PC_4_wire_ID = ID_wire [63:32];
 assign Instruction_wire_ID = ID_wire [31:0];
 
@@ -601,82 +679,5 @@ assign Jump_wire_WB = WB_wire[69];
 assign MemOut_wire_WB = WB_wire[68:37];
 assign ALUResult_wire_WB = WB_wire[36:5];
 assign WriteRegister_wire_WB = WB_wire[4:0];
-
-wire [1:0] A;
-wire [1:0] B;
-
-ForwardingUnit
-FwdUnit
-(
-	.WB_WB(RegWrite_wire_WB),
-	.WB_MEM(RegWrite_wire_MEM),
-	.RS_EX(RS_wire_EX),
-	.RT_EX(RT_wire_EX),
-	.RTorRD_MEM(WriteRegister_wire_MEM),
-	.RTorRD_WB(WriteRegister_wire_WB),
-	.A(A),
-	.B(B)
-
-);
-
-
-wire [31:0] MUXFwdA1to2_wire;
-wire [31:0] MUXFwdA_wire;
-wire [31:0] MUXFwdB1to2_wire;
-wire [31:0] MUXFwdB_wire;
-
-Multiplexer2to1
-#(
-.NBits(32)
-)
-MuxFwdUnitA1
-(
-.Selector(A[0]),
-.MUX_Data0(ALUResult_wire_MEM),
-.MUX_Data1(MemOrAlu_wire),
-.MUX_Output(MUXFwdA1to2_wire)
-);
-
-
-Multiplexer2to1
-#(
-.NBits(32)
-)
-MuxFwdUnitA2
-(
-.Selector(A[1]),
-.MUX_Data0(ReadData1_wire_EX),
-.MUX_Data1(MUXFwdA1to2_wire),
-.MUX_Output(MUXFwdA_wire) //usar este para sustituir
-);
-
-
-Multiplexer2to1
-#(
-.NBits(32)
-)
-MuxFwdUnitB1
-(
-.Selector(B[0]),
-.MUX_Data0(ALUResult_wire_MEM),
-.MUX_Data1(MemOrAlu_wire),
-.MUX_Output(MUXFwdB1to2_wire)
-);
-
-
-Multiplexer2to1
-#(
-.NBits(32)
-)
-MuxFwdUnitB2
-(
-.Selector(B[1]),
-.MUX_Data0(ReadData2OrInmmediate_wire),
-.MUX_Data1(MUXFwdB1to2_wire),
-.MUX_Output(MUXFwdB_wire)
-);
-
-
-
 
 endmodule
