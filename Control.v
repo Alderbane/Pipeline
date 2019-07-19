@@ -40,7 +40,7 @@ localparam I_Type_SW = 6'h2b;
 localparam J_Type_J	= 6'h02;
 localparam J_Type_JAL	= 6'h03;
 localparam I_Type_LUI = 6'h0f;
-localparam R_Type_JR = 10'b0111_000100;
+localparam R_Type_JR = 12'h008;
 
 reg [12:0] ControlValues;
 
@@ -73,7 +73,7 @@ assign BranchNE = ControlValues[5];
 assign BranchEQ = ControlValues[4];
 assign ALUOp = ControlValues[3:0];
 
-wire [9:0] Selector;
+wire [11:0] Selector;
 
 assign Selector = {OP, ALUFunction};
 
