@@ -142,7 +142,7 @@ Gate_BranchORIFFlush
 );
 
 ORGate
-BubbleOrBranchEq
+OrBranchEq
 (
 	.A(Bubble_wire),
 	.B(Zero_wire),
@@ -351,7 +351,7 @@ Multiplexer2to1
 )
 MUXControlHDU
 (
-.Selector(BubbleOrEQ_wire || Jump_wire == 1'b1),  //HDU Selector
+.Selector(BubbleOrEQ_wire),  //HDU Selector
 .MUX_Data0(Control_wire),
 .MUX_Data1(11'b0),
 .MUX_Output(Control_wire_ID)
@@ -605,7 +605,7 @@ ID_EX_Pipe
 .clk(clk),
 .reset(reset),
 .enable(1'b1),
-.DataInput({Jump_wire, Instruction_wire_ID[25:21], PC_4_wire, Control_wire_ID, ReadData1_wire, ReadData2_wire, InmmediateExtend_wire, Instruction_wire_ID[20:16], Instruction_wire_ID[15:11], Instruction_wire_ID[10:6]}),
+.DataInput({Jump_wire, Instruction_wire_ID[25:21], PC_4_wire_ID, Control_wire_ID, ReadData1_wire, ReadData2_wire, InmmediateExtend_wire, Instruction_wire_ID[20:16], Instruction_wire_ID[15:11], Instruction_wire_ID[10:6]}),
 .DataOutput(EX_wire),
 .Flush(1'b0)
 );
@@ -619,7 +619,7 @@ assign ReadData1_wire_EX = EX_wire[110:79];
 assign MemWrite_wire_EX = EX_wire[111];
 assign MemtoReg_wire_EX = EX_wire[112];
 assign MemRead_wire_EX = EX_wire[113];
-assign Jump_wire_EX = EX_wire[160];
+assign Jump_wire_EX = EX_wire[159];
 assign RegWrite_wire_EX = EX_wire[115];
 assign ALUSrc_wire_EX = EX_wire[116];
 assign ALUOp_wire_EX = EX_wire[120:117];
