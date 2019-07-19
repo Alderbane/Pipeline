@@ -39,7 +39,7 @@ ANDGate
 Gate_BranchNEANDZero
 (
 	.A(BranchNE),
-	.B(!Zero), //Si zero es diferente de 1,, significa que es diferente
+	.B(!Zero), //Si zero es diferente de 1, significa que es diferente
 	.C(NotZeroANDBrachNE)
 );
 

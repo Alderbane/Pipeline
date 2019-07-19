@@ -33,13 +33,13 @@ assign  PortOut = 0;
 wire ALUSrc_wire;
 wire BranchNE_wire;
 wire BranchEQ_wire;
+wire Bubble_wire;
 wire Jump_wire;
 wire JR_wire;
 wire MemRead_wire;
 wire MemWrite_wire;
 wire MemtoReg_wire;
 wire NotZeroANDBrachNE;
-wire ORForBranch;
 wire RegDst_wire;
 wire RegWrite_wire;
 wire RegWriteORJAL_wire;
@@ -52,15 +52,10 @@ wire MemRead_wire_EX;
 wire MemtoReg_wire_EX;
 wire MemWrite_wire_EX;
 wire RegDst_wire_EX;
-wire BranchNE_wire_EX;
-wire BranchEQ_wire_EX;
 wire PCEnable_Wire;
 wire IFFlush_wire;
 wire IFFlushOrBranch_wire;
 wire DEnable_Wire;
-wire JR_wire_MEM;
-wire BranchNE_wire_MEM;
-wire BranchEQ_wire_MEM;
 wire RegWrite_wire_MEM;
 wire Jump_wire_MEM;
 wire MemRead_wire_MEM;
@@ -69,6 +64,7 @@ wire MemWrite_wire_MEM;
 wire MemtoReg_wire_WB;
 wire RegWrite_wire_WB;
 wire Jump_wire_WB;
+wire BubbleOrEQ_wire;
 
 wire [3:0] ALUOp_wire;
 wire [3:0] ALUOperation_wire;
@@ -83,8 +79,8 @@ wire [4:0] WriteRegister_wire_MEM;
 wire [4:0] WriteRegister_wire_WB;
 
 wire [10:0] Control_wire;
+wire [10:0] Control_wire_ID;
 
-wire [31:0] JumpAddr_wire_EX;
 wire [31:0] PC_4_wire_EX;
 wire [31:0] ReadData1_wire_EX;
 wire [31:0] ReadData2_wire_EX;
@@ -114,15 +110,13 @@ wire [31:0] ReadData1_wire;
 wire [31:0] ReadData2_wire;
 wire [31:0] ReadData2OrInmmediate_wire;
 wire [31:0] MUXFwdA1to2_wire;
-wire [31:0] MUXFwdA_wire;
+wire [31:0] MUXFwdR1_wire;
 wire [31:0] MUXFwdB1to2_wire;
-wire [31:0] MUXFwdB_wire;
+wire [31:0] MUXFwdR2_wire;
 wire [31:0] ReadData1_wire_MEM;
-wire [31:0] JumpAddr_wire_MEM;
 wire [31:0] BranchToPC_wire_MEM;
 wire [31:0] ALUResult_wire_MEM;
 wire [31:0] ReadData2_wire_MEM;
-wire [31:0] JOrPC4OrBranchOrJR_wire_WB;
 wire [31:0] MemOut_wire_WB;
 wire [31:0] ALUResult_wire_WB;
 wire [31:0] PC_4_wire_MEM;
@@ -135,7 +129,6 @@ wire [193:0] EX_wire;
 
 integer ALUStatus;
 
-
 //|||||||||||||||||||||||||||||||||||||||||||||||\\
 //||||||||||||||CompuertasLogicas|||||||||||||||//
 //|||||||||||||||||||||||||||||||||||||||||||||||\\
@@ -144,8 +137,16 @@ ORGate
 Gate_BranchORIFFlush
 (
 	.A(IFFlush_wire),
-	.B(ORForBranch),
+	.B(Zero_wire),
 	.C(IFFlushOrBranch_wire)
+);
+
+ORGate
+BubbleOrBranchEq
+(
+	.A(Bubble_wire),
+	.B(Zero_wire),
+	.C(BubbleOrEQ_wire)
 );
 
 //|||||||||||||||||||||||||||||||||||||||||||||||\\
@@ -192,7 +193,7 @@ Multiplexer2to1
 )
 MUX_ForBranch
 (
-	.Selector(ORForBranch),
+	.Selector(Zero_wire),
 	.MUX_Data0(PC_4_wire),
 	.MUX_Data1(BranchToPC_wire),
 
@@ -207,8 +208,8 @@ Multiplexer2to1
 MUX_ForJump
 (
 	.Selector(Jump_wire),
-	.MUX_Data0(JumpAddr_wire),
-	.MUX_Data1(BranchOrPC4_wire),
+	.MUX_Data0(BranchOrPC4_wire),
+	.MUX_Data1(JumpAddr_wire),
 
 	.MUX_Output(JumpOrPC4OrBranch_wire)
 
@@ -221,8 +222,8 @@ Multiplexer2to1
 MUX_ForJumpRegister
 (
 	.Selector(JR_wire),
-	.MUX_Data0(ReadData1_wire),
-	.MUX_Data1(JumpOrPC4OrBranch_wire),
+	.MUX_Data0(JumpOrPC4OrBranch_wire),
+	.MUX_Data1(ReadData1_wire),
 
 	.MUX_Output(JOrPC4OrBranchOrJR_wire)
 
@@ -261,7 +262,8 @@ ControlUnit
 	.MemRead(MemRead_wire),
 	.MemtoReg(MemtoReg_wire),
 	.MemWrite(MemWrite_wire),
-	.JR(JR)
+	.JR(JR_wire),
+	.IFFlush(IFFlush_wire)
 	);
 
 //-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o
@@ -290,7 +292,7 @@ Data1EqualsData2
 	.ReadData2(ReadData2_wire),
 	.BranchEQ(BranchEQ_wire),
 	.BranchNE(BranchNE_wire),
-	.ORForBranch(ORForBranch)
+	.ORForBranch(Zero_wire)
 
 );
 
@@ -341,7 +343,7 @@ JumpAddr_4
 
 //-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o
 
-assign Control_wire = {JR_wire, RegDst_wire, BranchNE_wire, BranchEQ_wire, ALUOp_wire, ALUSrc_wire, RegWrite_wire, Jump_wire, MemRead_wire, MemtoReg_wire, MemWrite_wire};
+assign Control_wire = {RegDst_wire, ALUOp_wire, ALUSrc_wire, RegWrite_wire, Jump_wire, MemRead_wire, MemtoReg_wire, MemWrite_wire};
 
 Multiplexer2to1
 #(
@@ -349,7 +351,7 @@ Multiplexer2to1
 )
 MUXControlHDU
 (
-.Selector(Bubble_wire),  //HDU Selector
+.Selector(BubbleOrEQ_wire),  //HDU Selector
 .MUX_Data0(Control_wire),
 .MUX_Data1(11'b0),
 .MUX_Output(Control_wire_ID)
@@ -374,8 +376,8 @@ ALU
 Arithmetic_Logic_Unit
 (
 	.ALUOperation(ALUOperation_wire),
-	.A(MUXFwdA_wire),
-	.B(MUXFwdB_wire),
+	.A(MUXFwdR1_wire),
+	.B(MUXFwdR2_wire),
 	.shamt(shamt_EX),
 	.ALUResult(ALUResult_wire)
 );
@@ -395,7 +397,7 @@ FwdUnit
 	.RS_EX(RS_wire_EX),
 	.RT_EX(RT_wire_EX),
 	.RTorRD_MEM(WriteRegister_wire_MEM),
-	.RTorRD_WB(WriteRegister_wire_WB),
+	.RTorRD_WB(RAorWriteReg_wire),
 	.A(A),
 	.B(B)
 
@@ -417,7 +419,7 @@ MUX_ForReadDataAndInmediate
 
 );
 
-//-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o
+//-o-o-o-o-o-o-o
 
 Multiplexer2to1
 #(
@@ -433,7 +435,7 @@ MUX_ForRTypeAndIType
 
 );
 
-//-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o
+//-o-o-o-o-o-o-o
 
 Multiplexer2to1
 #(
@@ -443,11 +445,11 @@ MuxFwdUnitA1
 (
 .Selector(A[0]),
 .MUX_Data0(ALUResult_wire_MEM),
-.MUX_Data1(MemOrAlu_wire),
+.MUX_Data1(JAL_Address_or_ALU_Result_wire),
 .MUX_Output(MUXFwdA1to2_wire)
 );
 
-//-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o
+//-o-o-o-o-o-o-o
 
 Multiplexer2to1
 #(
@@ -458,10 +460,10 @@ MuxFwdUnitA2
 .Selector(A[1]),
 .MUX_Data0(ReadData1_wire_EX),
 .MUX_Data1(MUXFwdA1to2_wire),
-.MUX_Output(MUXFwdA_wire) //usar este para sustituir
+.MUX_Output(MUXFwdR1_wire) //usar este para sustituir
 );
 
-//-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o
+//-o-o-o-o-o-o-o
 
 Multiplexer2to1
 #(
@@ -471,11 +473,11 @@ MuxFwdUnitB1
 (
 .Selector(B[0]),
 .MUX_Data0(ALUResult_wire_MEM),
-.MUX_Data1(MemOrAlu_wire),
+.MUX_Data1(JAL_Address_or_ALU_Result_wire),
 .MUX_Output(MUXFwdB1to2_wire)
 );
 
-//-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o
+//-o-o-o-o-o-o-o
 
 Multiplexer2to1
 #(
@@ -486,7 +488,7 @@ MuxFwdUnitB2
 .Selector(B[1]),
 .MUX_Data0(ReadData2OrInmmediate_wire),
 .MUX_Data1(MUXFwdB1to2_wire),
-.MUX_Output(MUXFwdB_wire)
+.MUX_Output(MUXFwdR2_wire)
 );
 
 
@@ -505,6 +507,7 @@ SubstractToMemoryAddress
 
 assign MemoryAddress_wire = {1'b0, 1'b0, MemoryAddressx4_wire[31:2]};
 
+//-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o
 
 DataMemory
 #(
@@ -561,8 +564,8 @@ Multiplexer2to1
 MUX_JAL_address_Or_ALU_Result
 (
 	.Selector(Jump_wire_WB),
-	.MUX_Data0(PC_4_wire_WB),
-	.MUX_Data1(MemOrAlu_wire),
+	.MUX_Data0(MemOrAlu_wire),
+	.MUX_Data1(PC_4_wire_WB),
 
 	.MUX_Output(JAL_Address_or_ALU_Result_wire)
 
@@ -582,26 +585,27 @@ IF_ID_Pipe
 .clk(clk),
 .reset(reset),
 .enable(DEnable_Wire),
+.Flush(IFFlushOrBranch_wire),
 .DataInput({PC_4_wire, Instruction_wire}),
-.DataOutput(ID_wire),
-.Flush(IFFlushOrBranch_wire)
-);
+.DataOutput(ID_wire)
 
+);
 
 assign PC_4_wire_ID = ID_wire [63:32];
 assign Instruction_wire_ID = ID_wire [31:0];
 
+//-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o
 
 Pipe
 #(
-.N(194)
+.N(159)
 )
 ID_EX_Pipe
 (
 .clk(clk),
 .reset(reset),
 .enable(1'b1),
-.DataInput({Instruction_wire_ID[25:21], JumpAddr_wire, PC_4_wire, Control_wire_ID, ReadData1_wire, ReadData2_wire, InmmediateExtend_wire, Instruction_wire_ID[20:16], Instruction_wire_ID[15:11], Instruction_wire_ID[10:6]}),
+.DataInput({Instruction_wire_ID[25:21], PC_4_wire, Control_wire_ID, ReadData1_wire, ReadData2_wire, InmmediateExtend_wire, Instruction_wire_ID[20:16], Instruction_wire_ID[15:11], Instruction_wire_ID[10:6]}),
 .DataOutput(EX_wire),
 .Flush(1'b0)
 );
@@ -619,65 +623,60 @@ assign Jump_wire_EX = EX_wire[114];
 assign RegWrite_wire_EX = EX_wire[115];
 assign ALUSrc_wire_EX = EX_wire[116];
 assign ALUOp_wire_EX = EX_wire[120:117];
-assign BranchEQ_wire_EX = EX_wire[121];
-assign BranchNE_wire_EX = EX_wire[122];
-assign RegDst_wire_EX = EX_wire[123];
-assign JR_wire_EX = EX_wire[124];
-assign PC_4_wire_EX = EX_wire[156:125];
-assign JumpAddr_wire_EX = EX_wire[188:157];
-assign RS_wire_EX = EX_wire[193:189];
+assign RegDst_wire_EX = EX_wire[121];
+assign PC_4_wire_EX = EX_wire[153:122];
+assign RS_wire_EX = EX_wire[158:154];
+
+//-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o
 
 Pipe
 #(
-.N(205)
+.N(170)
 )
 EX_MEM_Pipe
 (
 .clk(clk),
 .reset(reset),
 .enable(1'b1),
-.DataInput({PC_4_wire_EX,ReadData1_wire_EX, JR_wire_EX, JumpAddr_wire_EX, BranchNE_wire_EX, BranchEQ_wire_EX, RegWrite_wire_EX, Jump_wire_EX, MemRead_wire_EX, MemtoReg_wire_EX, MemWrite_wire_EX, BranchToPC_wire, ALUResult_wire, MUXFwdB_wire, WriteRegister_wire}),
+.DataInput({PC_4_wire_EX,ReadData1_wire_EX, RegWrite_wire_EX, Jump_wire_EX, MemRead_wire_EX, MemtoReg_wire_EX, MemWrite_wire_EX, BranchToPC_wire, ALUResult_wire, ReadData2_wire_EX, WriteRegister_wire}),
 .DataOutput(MEM_wire),
 .Flush(1'b0)
 );
 
-assign PC_4_wire_MEM = MEM_wire[204:173];
-assign ReadData1_wire_MEM = MEM_wire[172:141];
-assign JR_wire_MEM = MEM_wire[140];
-assign JumpAddr_wire_MEM = MEM_wire[139:108];
-assign BranchNE_wire_MEM = MEM_wire[107];
-assign BranchEQ_wire_MEM = MEM_wire[106];
-assign RegWrite_wire_MEM = MEM_wire[105];
-assign Jump_wire_MEM = MEM_wire[104];
-assign MemRead_wire_MEM = MEM_wire[103];
-assign MemtoReg_wire_MEM = MEM_wire[102];
-assign MemWrite_wire_MEM = MEM_wire[101];
-assign BranchToPC_wire_MEM = MEM_wire[100:69];
-assign ALUResult_wire_MEM = MEM_wire[68:37];
-assign ReadData2_wire_MEM = MEM_wire[36:5];
 assign WriteRegister_wire_MEM = MEM_wire[4:0];
+assign ReadData2_wire_MEM = MEM_wire[36:5];
+assign ALUResult_wire_MEM = MEM_wire[68:37];
+assign BranchToPC_wire_MEM = MEM_wire[100:69];
+assign MemWrite_wire_MEM = MEM_wire[101];
+assign MemtoReg_wire_MEM = MEM_wire[102];
+assign MemRead_wire_MEM = MEM_wire[103];
+assign Jump_wire_MEM = MEM_wire[104];
+assign RegWrite_wire_MEM = MEM_wire[105];
+assign ReadData1_wire_MEM = MEM_wire[137:106];
+assign PC_4_wire_MEM = MEM_wire[169:138];
+
+//-o-o-o-o-o-o-o-o-o-o-o-o-o-o-o
 
 Pipe
 #(
-.N(136)
+.N(104)
 )
 MEM_WB_Pipe
 (
 .clk(clk),
 .reset(reset),
 .enable(1'b1),
-.DataInput({PC_4_wire_MEM ,MemtoReg_wire_MEM, JOrPC4OrBranchOrJR_wire, RegWrite_wire_MEM, Jump_wire_MEM, MemOut_wire, ALUResult_wire_MEM, WriteRegister_wire_MEM}),
+.DataInput({PC_4_wire_MEM ,MemtoReg_wire_MEM, RegWrite_wire_MEM, Jump_wire_MEM, MemOut_wire, ALUResult_wire_MEM, WriteRegister_wire_MEM}),
 .DataOutput(WB_wire),
 .Flush(1'b0)
 );
 
-assign PC_4_wire_WB = WB_wire[135:104];
-assign MemtoReg_wire_WB = WB_wire[103];
-assign JOrPC4OrBranchOrJR_wire_WB = WB_wire[102:71];
-assign RegWrite_wire_WB = WB_wire[70];
-assign Jump_wire_WB = WB_wire[69];
-assign MemOut_wire_WB = WB_wire[68:37];
-assign ALUResult_wire_WB = WB_wire[36:5];
 assign WriteRegister_wire_WB = WB_wire[4:0];
+assign ALUResult_wire_WB = WB_wire[36:5];
+assign MemOut_wire_WB = WB_wire[68:37];
+assign Jump_wire_WB = WB_wire[69];
+assign RegWrite_wire_WB = WB_wire[70];
+assign MemtoReg_wire_WB = WB_wire[71];
+assign PC_4_wire_WB = WB_wire[103:72];
 
 endmodule

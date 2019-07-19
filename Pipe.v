@@ -26,11 +26,9 @@ module Pipe
 always@(negedge reset or negedge clk) begin
 	if(reset==0)
 		DataOutput <= 0;
-	else
-		if(Flush==1)
+	else if(Flush==1)
 			DataOutput <= 0;
-		else
-			if(enable==1)
+	else if(enable==1)
 				DataOutput<=DataInput;
 end
 
